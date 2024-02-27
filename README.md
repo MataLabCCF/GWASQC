@@ -1,3 +1,1 @@
 # GWASQC
-
-## To do
