@@ -1,0 +1,34 @@
+C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/Programs/plink2.exe --vcf C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/Inputs/batch1To5_GenTrain_noAnnotation_reheader_noBatch.vcf.gz --make-pfile --out C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test --update-sex C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_updateSex.txt --split-par hg38
+Convert to PLINK2 format:
+	#Samples: 2992
+	#Variants: 1890535
+		chr1: 151903
+		chr2: 157504
+		chr3: 127796
+		chr4: 108386
+		chr5: 103309
+		chr6: 120431
+		chr7: 96313
+		chr8: 86274
+		chr9: 75861
+		chr10: 82257
+		chr11: 99156
+		chr12: 85808
+		chr13: 62461
+		chr14: 58324
+		chr15: 58094
+		chr16: 64260
+		chr17: 73448
+		chr18: 46601
+		chr19: 60617
+		chr20: 42557
+		chr21: 23930
+		chr22: 28238
+		chrPAR1: 3739
+		chrX: 66881
+		chrPAR2: 341
+		chrY: 5369
+		chrMT: 677
+C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/Programs/plink2.exe --pfile C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test --remove C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_missingBasicCovar.txt --make-pfile --out C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_nonMissing
+C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/Programs/plink2.exe --pfile C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_nonMissing --out C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test --freq counts
+C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/Programs/plink2.exe --pfile C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_nonMissing --extract C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_toExtractDuplicate.txt --make-pfile --out C:/Users/PEIXOTT/PycharmProjects/QCToGWAS/TESTE//Test_duplicate
