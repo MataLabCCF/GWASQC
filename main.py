@@ -29,6 +29,7 @@ def removeDuplicates(inputFile, outputName, outputFolder, plink2, listToRemove, 
     countFile.close()
 
     dictUniqueVar = {}
+    dictDuplicatePos = {}
     pvar = open(f"{inputFile}.pvar")
     header = True
     for line in pvar:
@@ -50,6 +51,11 @@ def removeDuplicates(inputFile, outputName, outputFolder, plink2, listToRemove, 
                     oldID = dictUniqueVar[uniqueIDAlt]
                     foundID = uniqueIDAlt
 
+                #Build list of duplicates
+                if foundID not in dictDuplicatePos:
+                    dictDuplicatePos[foundID] = 1
+                dictDuplicatePos[foundID] = dictDuplicatePos[foundID] + 1
+
                 if dictCount[ID] > dictCount[oldID]:
                     dictUniqueVar[foundID] = ID
     pvar.close()
@@ -58,6 +64,13 @@ def removeDuplicates(inputFile, outputName, outputFolder, plink2, listToRemove, 
     for ID in dictUniqueVar:
         toExtract.write(f"{dictUniqueVar[ID]}\n")
     toExtract.close()
+
+    duplicateFile = open(f"{outputFolder}/{outputName}_duplicatePos.txt", "w")
+    duplicateFile.write(f"Chrom\tPos\tRef\tAlt\tCount\n")
+    for ID in dictDuplicatePos:
+        data = ID.split(":")
+        duplicateFile.write(f"{data[0]}\t{data[1]}\t{data[2]}\t{data[3]}\t{dictDuplicatePos[ID]}\n")
+    duplicateFile.close()
 
     command, inputFile = PFILE.extractVariants(f"{outputFolder}/{outputName}_toExtractDuplicate.txt",
                                              inputFile,outputName, outputFolder,"duplicate", plink2)
@@ -420,7 +433,6 @@ if __name__ == '__main__':
 
     stepsToRun = readStepsFile(args.steps)
     stepsToRun = {}
-    stepsToRun["geno"] = 0.05
     stepsToRun["duplicate"] = 0.05
 
     for step in stepsToRun:
