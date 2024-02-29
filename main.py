@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import argparse
 import numpy as np
 
@@ -106,20 +107,26 @@ def relationshipControl(inputFile, outputName, outputFolder, plink2, cutoff, NAT
                 countTotal = countTotal + 1
                 toExclude.write(f"{line}")
             outputNatora.close()
-            print(f"f\tWe removed {count} from file {kingInputFile}.kin0")
+            print(f"\tWe removed {count} from file {kingInputFile}.kin0")
         else:
             print(f"\tThe file {kingInputFile}.kin0 does not exists. Maybe it is a population with a single sample")
 
     print(f"f\tWe should {countTotal} from file {inputFile}")
     #os.replace(f"{inputFile}_OLD.psam", f"{inputFile}.psam")
 
+    listToRemove.append(f"{outputFolder}/{outputName}_input.txt")
+    listToRemove.append(f"{outputFolder}/{outputName}_output_familyList.txt")
+    listToRemove.append(f"{outputFolder}/{outputName}_output_toRemove.txt")
+
     toExclude.close()
     if countTotal > 0:
         command, inputFile = PFILE.removeSamples(f"{outputFolder}/{outputName}_NAToRA_Removal.txt",
                                                  inputFile, outputName, outputFolder, "Relationship", plink2)
 
-        listToRemove = addBfiles(f"{inputFile}", listToRemove)
+        listToRemove = addPfiles(f"{inputFile}", listToRemove)
         execute(command, logFile)
+
+    addStatsOnLog(f"{inputFile}", "Relationship control with NAToRA", logFile)
 
     return inputFile, listToRemove
 
@@ -129,21 +136,47 @@ def filterHWE(inputFile, outputName, outputFolder, plink2, listToRemove, pvalue,
     command = f"{plink2} --pfile {inputFile} --hwe {pvalue} --make-pfile "
     if isControl:
         type = "HWEControl"
-        command = command + f"--out {outputFolder}/{outputName}_{type} --keep-if STATUS = control"
+        command = command + f"--out {outputFolder}/{outputName}_{type} --keep-if STATUS = control "
+        execute(command, logFile)
+
+        HWECase = open(f"{outputFolder}/{outputName}_{type}.pvar")
+        varToKeep = open(f"{outputFolder}/{outputName}_toKeep_HWE.txt", "w")
+        listToRemove.append(f"{outputFolder}/{outputName}_toKeep_HWE.txt")
+
+        header = True
+        for line in HWECase:
+            if header:
+                if "#CHROM" in line:
+                    header = False
+            else:
+                ID = line.strip().split()[2]
+                varToKeep.write(f"{ID}\n")
+
+        HWECase.close()
+        varToKeep.close()
+
+        command, returnFile = PFILE.extractVariants(f"{outputFolder}/{outputName}_toKeep_HWE.txt", inputFile,
+                                                   outputName, outputFolder, "HWEControl_AllSamples", plink2)
+        listToRemove = addPfiles(returnFile, listToRemove
+                                 )
+
     else:
         type = "HWECase"
         command = command + f"--out {outputFolder}/{outputName}_{type}"
+        returnFile = f"{outputFolder}/{outputName}_{type}"
 
     execute(command, logFile)
     listToRemove= addPfiles(f"{outputFolder}/{outputName}_{type}", listToRemove)
+    addStatsOnLog(f"{returnFile}", f"{type}", logFile)
 
-    return f"{outputFolder}/{outputName}_{type}", listToRemove
+    return f"{returnFile}", listToRemove
 
 #=====================================================================================================================
 def removeExcessHeterozygosity(inputFile, outputName, outputFolder, plink2, listToRemove, numStd, logFile):
     command = f"{plink2} --pfile {inputFile} --out {outputFolder}/{outputName} --het"
     execute(command, logFile)
 
+    listToRemove.append(f"{outputFolder}/{outputName}.het")
     fileHet = open(f"{outputFolder}/{outputName}.het")
     header = True
 
@@ -169,6 +202,7 @@ def removeExcessHeterozygosity(inputFile, outputName, outputFolder, plink2, list
 
     count = 0
     toRemoveHet = open(f"{outputFolder}/{outputName}_heterozygosity.txt", "w")
+    listToRemove.append(f"{outputFolder}/{outputName}_heterozygosity.txt")
 
     for ind in hetDict:
         if hetDict[ind] < cutoffMin:
@@ -184,9 +218,9 @@ def removeExcessHeterozygosity(inputFile, outputName, outputFolder, plink2, list
         command, inputFile = PFILE.removeSamples(f"{outputFolder}/{outputName}_heterozygosity.txt", inputFile, outputName,
                                                  outputFolder, "Heterozygosity", plink2)
         execute(command, logFile)
-        listToRemove = addBfiles(f"{inputFile}", listToRemove)
+        listToRemove = addPfiles(f"{inputFile}", listToRemove)
 
-        addStatsOnLog(f"{inputFile}", "Heterozygosity                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ", logFile)
+        addStatsOnLog(f"{inputFile}", "Heterozygosity", logFile)
 
     return inputFile, listToRemove
 #=====================================================================================================================
@@ -195,7 +229,7 @@ def removeDuplicates(inputFile, outputName, outputFolder, plink2, listToRemove, 
     execute(command, logFile)
 
     dictCount = {}
-
+    listToRemove.append(f"{outputFolder}/{outputName}.acount")
     countFile = open(f"{outputFolder}/{outputName}.acount")
     header = True
     for line in countFile:
@@ -239,22 +273,28 @@ def removeDuplicates(inputFile, outputName, outputFolder, plink2, listToRemove, 
     pvar.close()
 
     toExtract = open(f"{outputFolder}/{outputName}_toExtractDuplicate.txt", "w")
+    listToRemove.append(f"{outputFolder}/{outputName}_toExtractDuplicate.txt")
+
     for ID in dictUniqueVar:
         toExtract.write(f"{dictUniqueVar[ID]}\n")
     toExtract.close()
 
     duplicateFile = open(f"{outputFolder}/{outputName}_duplicatePos.txt", "w")
     duplicateFile.write(f"Chrom\tPos\tRef\tAlt\tCount\n")
+
     for ID in dictDuplicatePos:
         data = ID.split(":")
         duplicateFile.write(f"{data[0]}\t{data[1]}\t{data[2]}\t{data[3]}\t{dictDuplicatePos[ID]}\n")
     duplicateFile.close()
 
+    listToRemove.append(f"{outputFolder}/{outputName}_duplicatePos.txt")
     command, inputFile = PFILE.extractVariants(f"{outputFolder}/{outputName}_toExtractDuplicate.txt",
                                              inputFile,outputName, outputFolder,"duplicate", plink2)
 
     execute(command, logFile)
     listToRemove = addPfiles(inputFile, listToRemove)
+
+    addStatsOnLog(f"{inputFile}", "Duplicate", logFile)
 
     return inputFile, listToRemove
 #=======================================================================================================================
@@ -267,6 +307,9 @@ def removeMissingData(inputFile, outputName, outputFolder, plink2, listToRemove,
 
     execute(command, logFile)
     listToRemove = addPfiles(f"{outputFolder}/{outputName}_{step}", listToRemove)
+
+    addStatsOnLog(f"{outputFolder}/{outputName}_{step}", step, logFile)
+
     return f'{outputFolder}/{outputName}_{step}', listToRemove
 #=======================================================================================================================
 def removeATCG(inputFile, outputName, outputFolder, plink2, listToRemove, logFile):
@@ -296,7 +339,10 @@ def removeATCG(inputFile, outputName, outputFolder, plink2, listToRemove, logFil
         command, inputFile = PFILE.removeVariants(f"{outputFolder}/{outputName}_listATCG.txt", inputFile, outputName,
                                                  outputFolder, "ATCG", plink2)
         execute(command, logFile)
-        listToRemove = addPfiles(command, listToRemove)
+        listToRemove = addPfiles(inputFile, listToRemove)
+
+    addStatsOnLog(f"{inputFile}", "Redundant variants", logFile)
+
 
     return inputFile, listToRemove
 #=======================================================================================================================
@@ -321,6 +367,7 @@ def sexCheck(inputFile, covarDict, outputName, outputFolder, plink1, plink2, lis
 
     sexCheckFile = open(f"{outputFolder}/{outputName}_checkSex.sexcheck")
     samplesWithProblem = open(f"{outputFolder}/{outputName}_sexProblem.txt", 'w')
+    listToRemove.append(f"{outputFolder}/{outputName}_sexProblem.txt")
     count = 0
 
     header = True
@@ -349,7 +396,7 @@ def sexCheck(inputFile, covarDict, outputName, outputFolder, plink1, plink2, lis
                                                 outputName, outputFolder, "Sex-check", plink2)
 
         execute(command, logFile)
-        listToRemove = addBfiles(f"{inputFile}", listToRemove)
+        listToRemove = addPfiles(f"{inputFile}", listToRemove)
 
         addStatsOnLog(f"{inputFile}", "Check-sex", logFile)
 
@@ -361,7 +408,7 @@ def readStepsFile(stepFile):
     if stepFile != "":
         file = open(stepFile)
         for line in file:
-            split = line.strip().split()
+            split = line.strip().split("\t")
             if len(split) == 1:
                 dictSteps[split[0]] = ""
             elif len(split) == 2:
@@ -441,9 +488,8 @@ def addInformationOnPSAM(inputFile, dictTable, outputName, outputFolder, plink2,
                     filePSAMWithCovar.write(f"\t{dictTable[ind][covar]}")
             filePSAMWithCovar.write(f"\n")
 
-
     filePSAMWithCovar.close()
-    listToRemove = addPfiles(f"{outputFolder}/{outputName}_nonMissing", listToRemove)
+    addStatsOnLog(f"{outputFolder}/{outputName}_nonMissing", "Removing basic covar missing", logFile)
 
     return f"{outputFolder}/{outputName}_nonMissing", listToRemove
 #=====================================================================================================================
@@ -474,6 +520,7 @@ def convertInputFile(inputFile, outputName, outputFolder, covarDict, plink2, lis
     print("\tBuilding the list to be used at \"--update-sex\" (see plink2 documentation)")
     indList = getIndListFromInputFile(inputFile)
     fileToUpdateSex = buildSexUpdateFile(indList, covarDict, outputFolder, outputName)
+    listToRemove.append(fileToUpdateSex)
 
     print("\tConverting to PFILE")
     command, inputFile = getConvertCommand(inputFile, outputFolder, outputName, fileToUpdateSex, plink2)
@@ -558,8 +605,6 @@ if __name__ == '__main__':
     optional = parser.add_argument_group("Optional arguments")
     optional.add_argument('-e', '--erase', help='Set to exclude all temporary files', required=False,
                           default= False, action='store_true')
-    optional.add_argument('-p', '--phenoName', help='Name of the phenotype column in the info file '
-                                                    '(default: PHENO)', required=False, default="PHENO")
     optional.add_argument('-s', '--steps', help='File with the order of the steps (one step per line)',
                           required=False, default = "")
     optional.add_argument('-P', '--popFile', required=False,
@@ -574,11 +619,10 @@ if __name__ == '__main__':
     programs.add_argument('--NAToRA', required=False, help='Path to NAToRA (default: NAToRA.py)', default="NAToRA.py")
     programs.add_argument('--python', required=False, help='Python > 3 with networkX instaled '
                                                            '(default: python)', default="python")
-    programs.add_argument('--king', required=False, help='Path to king program (default: king)', default="king")
 
     args = parser.parse_args()
 
-    logFile = createFolder(args.outputFolder, f"{args.outputFolder}/{args.outputName}_QC.log")
+    logFile = createFolder(args.outputFolder)
 
     listToRemove = []
 
@@ -630,10 +674,17 @@ if __name__ == '__main__':
                                                           stepsToRun[step], args.NAToRA, args.python, args.popFile,
                                                           listToRemove, logFile)
 
+    createFolder(f"{args.outputFolder}/FinalData", False)
+    shutil.copyfile(f"{inputFile}.pgen", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.pgen")
+    shutil.copyfile(f"{inputFile}.psam", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.psam")
+    shutil.copyfile(f"{inputFile}.pvar", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.pvar")
 
 
 
     if args.erase:
         for file in listToRemove:
+            print(f"Excluding {file}")
             os.remove(file)
+
+    logFile.close()
 
