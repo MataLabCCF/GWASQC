@@ -659,7 +659,7 @@ if __name__ == '__main__':
         elif step == "heterozygosity":
             print("Running excess heterozygosity removal")
             inputFile, listToRemove = removeExcessHeterozygosity(inputFile, args.outputName, args.outputFolder, args.plink2,
-                                                 listToRemove, stepsToRun[step], logFile)
+                                                 listToRemove, int(stepsToRun[step]), logFile)
         elif step == "HWE control":
             print("Removing variants that failed on HWE exact test in controls")
             inputFile, listToRemove = filterHWE(inputFile, args.outputName, args.outputFolder, args.plink2,listToRemove,
