@@ -215,6 +215,22 @@ In this pipeline we use:
 
 \* Used on relationship control
 
+## Common Problems
+
+-  **PLINK2 errors**:
+   - Error: Unrecognized flag ('--het').
+     - PLINK2 is a tool in development, so we strongly recommend download the latest version and use it.
+
+- **NAToRA errors**:
+  - ImportError: No module named networkx
+    - Install networkX in your python.
+      - *pip install networkx* or *python -m pip install networkx*
+    - If the problem persists
+      - Some computer environments have different python installed. To fix this
+        - type *which python* and copy the path and add on the --python in your command line
+      
+
+
 ## Acknowledgements
 
 This work is supported by NIH Grant R01 1R01NS112499-01A1, MJFF Grant ID: 18298, ASAP-GP2 and Parkinson's Foundation
