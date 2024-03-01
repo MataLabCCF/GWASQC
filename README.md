@@ -235,6 +235,8 @@ In this pipeline we use:
 
 This work is supported by NIH Grant R01 1R01NS112499-01A1, MJFF Grant ID: 18298, ASAP-GP2 and Parkinson's Foundation
 
+We also want to thank all users that report problems/bugs.
+
  ### Contact 
 
  Developer: Thiago Peixoto Leal. PhD (PEIXOTT@ccf.org or thpeixotol@hotmail.com)
