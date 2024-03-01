@@ -674,7 +674,7 @@ if __name__ == '__main__':
                                                           stepsToRun[step], args.NAToRA, args.python, args.popFile,
                                                           listToRemove, logFile)
 
-    createFolder(f"{args.outputFolder}/FinalData", False)
+    os.mkdir(f"{args.outputFolder}/FinalData")
     shutil.copyfile(f"{inputFile}.pgen", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.pgen")
     shutil.copyfile(f"{inputFile}.psam", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.psam")
     shutil.copyfile(f"{inputFile}.pvar", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.pvar")
