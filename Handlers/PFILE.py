@@ -17,6 +17,11 @@ def removeSamples(fileToRemove, inputFile, outputName, outputFolder, step, plink
     command = f"{plink2} --pfile {inputFile} --remove {fileToRemove} --make-pfile --out {outName}"
     return command, outName
 
+def extractSamples(fileToKeep, inputFile, outputName, outputFolder, step, plink2):
+    outName = f"{outputFolder}/{outputName}_{step}"
+    command = f"{plink2} --pfile {inputFile} --keep {fileToKeep} --make-pfile --out {outName}"
+    return command, outName
+
 def removeVariants(fileToRemove, inputFile, outputName, outputFolder, step, plink2):
     outName = f"{outputFolder}/{outputName}_{step}"
     command = f"{plink2} --pfile {inputFile} --exclude {fileToRemove} --make-pfile --out {outName}"

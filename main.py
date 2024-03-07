@@ -10,6 +10,32 @@ from Handlers import PFILE
 from Utils.utils import execute, createFolder
 from Handlers import COVAR
 
+def separatePerPop(inputFile, outputName, outputFolder, plink2, popFileName, listToRemove, logFile):
+    popFile = open(popFileName)
+    header = True
+
+    dictCountry = {}
+    fileCountry = {}
+
+    for line in popFile:
+        if header:
+            header = False
+        else:
+            ID, pop = line.strip().split()
+
+            if pop not in fileCountry:
+                fileCountry[pop] = open(f"{outputFolder}/{outputName}_list{pop}.txt", "w")
+                listToRemove.append(f"{outputFolder}/{outputName}_list{pop}.txt")
+            fileCountry[pop].write(f"{ID}\n")
+
+    for pop in fileCountry:
+        fileCountry[pop].close()
+        command, newFile = PFILE.extractSamples(f"{outputFolder}/{outputName}_list{pop}.txt", inputFile,
+                                                outputName,outputFolder, f"extract_{pop}", plink2)
+
+        execute(command, logFile)
+
+
 def relationshipControl(inputFile, outputName, outputFolder, plink2, cutoff, NAToRA, python, popFileName, listToRemove, logFile):
     toNAToRA = []
 
@@ -680,6 +706,8 @@ if __name__ == '__main__':
     shutil.copyfile(f"{inputFile}.psam", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.psam")
     shutil.copyfile(f"{inputFile}.pvar", f"{args.outputFolder}/FinalData/{args.outputName}_QCed.pvar")
 
+    if args.savePerPop:
+        separatePerPop(inputFile, args.outputName, f"{args.outputFolder}/FinalData/", args.plink2, args.popFile, listToRemove, logFile)
 
 
     if args.erase:
