@@ -510,6 +510,8 @@ def addInformationOnPSAM(inputFile, dictTable, outputName, outputFolder, plink2,
             for covar in covarIDs:
                 if covar not in dictTable[ind]:
                     filePSAMWithCovar.write(f"\tNA")
+                elif dictTable[ind][covar] in ["", " "]:
+                    filePSAMWithCovar.write(f"\tNA")
                 else:
                     filePSAMWithCovar.write(f"\t{dictTable[ind][covar]}")
             filePSAMWithCovar.write(f"\n")
@@ -637,7 +639,7 @@ if __name__ == '__main__':
                           help='File with two columns: Individual ID and Population ID.This approach is important for'
                                'relationship control that should be done per population')
     optional.add_argument('-S', '--savePerPop', required=False,
-                          help='Save the QCed data with all pops and per population')
+                          help='Save the QCed data with all pops and per population', action = 'store_true')
 
     programs = parser.add_argument_group("Programs arguments")
     programs.add_argument('--plink2', required=False, help='Path to Plink 2 (default: plink2)', default="plink2")

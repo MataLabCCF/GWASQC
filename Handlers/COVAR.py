@@ -97,7 +97,10 @@ def readCovarFile(infoName):
                 sys.exit("")
         else:
             lineCount = lineCount + 1
-            data = line.strip().split("\t")
+            data = line.split("\t")
+            data[-1] = data[-1].strip()
+
+            #print(data)
 
             if dictFields["ID"] < len(data):
                 ID = data[dictFields["ID"]].replace(" ", "_")
