@@ -64,8 +64,8 @@ file is used by relationship control and to the flag -S (to be implemented)
 
   - **STATUS:** Status information for the sample. Possible header names: Pheno, status, affection_status.
     - *Case:*
-      - `0` (0/1 codification)
-      - `1` (1/2 codification, default to Plink)
+      - `1` (0/1 codification)
+      - `2` (1/2 codification, default to Plink)
       - `case`, `pd case`, `affected`
 
     - *Control:*
