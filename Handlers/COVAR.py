@@ -37,8 +37,7 @@ def formatTable(dictTable):
             elif isControl(dictTable[ind]["STATUS_Original"]):
                 dictTable[ind]["STATUS"] = "1"
             else:
-                input(dictTable[ind]["STATUS_Original"])
-
+                input(f"Not recognized Status: {dictTable[ind]['STATUS_Original']}")
 
     return dictTable
 
@@ -100,8 +99,6 @@ def readCovarFile(infoName):
             data = line.split("\t")
             data[-1] = data[-1].strip()
 
-            #print(data)
-
             if dictFields["ID"] < len(data):
                 ID = data[dictFields["ID"]].replace(" ", "_")
 
@@ -121,7 +118,6 @@ def readCovarFile(infoName):
                     for i in range(0, len(data)):
                         if i not in [dictFields["ID"], dictFields["SEX"], dictFields["STATUS"]]:
                             dictTable[ID][headerLine[i].upper()] = data[i]
-
     infoFile.close()
     dictTable = formatTable(dictTable)
     return dictTable
@@ -152,13 +148,14 @@ def getTypeStatus(dictTable):
     statusType = ""
 
     for ind in dictTable:
-        if dictTable[ind]["STATUS_Original"].isnumeric():
-            if dictTable[ind]["STATUS_Original"] == "0":
-                statusType = "01"
-            elif dictTable[ind]["STATUS_Original"] == "2":
-                statusType = "12"
-        else:
-            statusType = "Text"
+        if dictTable[ind]["STATUS_Original"] != "NA":
+            if dictTable[ind]["STATUS_Original"].isnumeric():
+                if dictTable[ind]["STATUS_Original"] == "0":
+                    statusType = "01"
+                elif dictTable[ind]["STATUS_Original"] == "2":
+                    statusType = "12"
+            else:
+                statusType = "Text"
 
     if statusType == "":
         sys.exit("The status was not recognized. We expect 0/1, 1/2")
